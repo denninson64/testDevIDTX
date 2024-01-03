@@ -88,7 +88,7 @@ public class PhotoServiceTest extends BaseServiceTest {
     }
 
     private void photoReadAll(int totalCnt) {
-        List<Photo> photos = (List<Photo>) photoService.getPhotosAll();
+        List<Photo> photos = photoService.getPhotosAll();
         assertEquals(totalCnt, photos.size());
     }
 

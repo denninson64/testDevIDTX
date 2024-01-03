@@ -55,7 +55,7 @@ public class AlbumServiceTest extends BaseServiceTest {
     }
 
     private void albumReadAll(int totalCnt) {
-        List<Album> albums = (List<Album>) albumService.getAlbumsAll();
+        List<Album> albums = albumService.getAlbumsAll();
         assertEquals(totalCnt, albums.size());
     }
 
