@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,8 +19,8 @@ public class Album {
     private String title;
     private Long userId;
 
-    @OneToMany(mappedBy = "album" )
-    private List<Photo> photos;
+    @OneToMany(mappedBy = "album", fetch = FetchType.EAGER)
+    private List<Photo> photos = new ArrayList<>();
 
     public Album(String title, Long userId){
         setTitle(title);

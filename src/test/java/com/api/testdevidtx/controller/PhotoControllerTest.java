@@ -55,7 +55,7 @@ public class PhotoControllerTest extends BaseControllerTest {
 
         when(photoService.getPhotoById(photoId1)).thenReturn(expectedPhoto);
 
-        mockMvc.perform(get("/api/photos/{id}", photoId1)
+        mockMvc.perform(get(PhotoController.PHOTOS_BASE_URI + "/{id}", photoId1)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -74,7 +74,7 @@ public class PhotoControllerTest extends BaseControllerTest {
 
         when(photoService.getPhotosAll()).thenReturn(photos);
 
-        mockMvc.perform(get("/api/photos")
+        mockMvc.perform(get(PhotoController.PHOTOS_BASE_URI)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -107,7 +107,7 @@ public class PhotoControllerTest extends BaseControllerTest {
 
         // Test case where album exists
         when(albumService.getAlbumById(albumId1)).thenReturn(album);
-                mockMvc.perform(get("/api/photos/byAlbum/{id}", albumId1)
+                mockMvc.perform(get(PhotoController.PHOTOS_BASE_URI + "/byAlbum/{id}", albumId1)
                                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -127,7 +127,7 @@ public class PhotoControllerTest extends BaseControllerTest {
 
         // Test case where album does not exist
         when(albumService.getAlbumById(albumId1)).thenReturn(null);
-        mockMvc.perform(get("/api/photos/byAlbum/{id}", albumId1)
+        mockMvc.perform(get(PhotoController.PHOTOS_BASE_URI + "/byAlbum/{id}", albumId1)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

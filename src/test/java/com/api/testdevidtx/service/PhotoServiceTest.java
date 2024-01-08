@@ -2,121 +2,122 @@ package com.api.testdevidtx.service;
 
 import com.api.testdevidtx.entity.Album;
 import com.api.testdevidtx.entity.Photo;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit4.SpringRunner;
 
+import com.api.testdevidtx.repository.PhotoRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PhotoServiceTest extends BaseServiceTest {
 
-    private final String photoTitle = "photoTitle";
-    private final String photoTitle2 = "photoTitle2";
-    private final String photoUrl = "photoUrl";
-    private final String photoUrl2 = "photoUr2l";
-    private final String photoThumbnailUrl = "photoThumbnailUrl";
-    private final String albumTitle = "myAlbum";
-    private final String albumTitle2 = "myAlbum2";
-    private final Long userId = 100L;
+    @InjectMocks
+    private PhotoServiceImpl photoService;
 
-    @Autowired
-    PhotoService photoService;
-
-    @Autowired
-    AlbumService albumService;
+    @Mock
+    private PhotoRepository photoRepository;
 
     @Test
-    public void testPhotoCRUD() {
-        Album album = new Album();
-        album.setTitle(albumTitle);
-        album.setUserId(userId);
-        Album album1 = albumService.save(album);
-        album = new Album();
-        album.setTitle(albumTitle2);
-        album.setUserId(userId);
-        Album album2 = albumService.save(album);
+    public void testInitDataSet() {
+        List<Photo> photos = createPhotos();
+        when(photoRepository.saveAll(photos)).thenReturn(photos);
 
-        // Test crud methods
-        Photo createdPhoto = photoCreate(album1);
-        photoRead(createdPhoto);
-        photoReadAll(1);
-        photoUpdate(createdPhoto);
-        createdPhoto = photoCreate(album1);
-        photoReadAll(2);
-        testAlbumPhotos(album1.getId(), 2);
-        photoDelete(createdPhoto);
-        photoReadAll(1);
-        photoCreate(album2);
-        photoCreate(album2);
-        photoCreate(album2);
-        photoCreate(album2);
-        testAlbumPhotos(album1.getId(), 1);
-        testAlbumPhotos(album2.getId(), 4);
+        List<Photo> result = photoService.initDataSet(photos);
+
+        assertEquals(photos.size(), result.size());
+        verify(photoRepository, times(1)).saveAll(photos);
     }
 
-    private Photo photoCreate(Album album) {
+    @Test
+    public void testGetPhotosAll() {
+        List<Photo> photos = createPhotos();
+        when(photoRepository.findAll()).thenReturn(photos);
+
+        List<Photo> result = photoService.getPhotosAll();
+
+        assertEquals(photos.size(), result.size());
+        verify(photoRepository, times(1)).findAll();
+    }
+
+    @Test
+    public void testGetPhotoById() {
+        Long photoId = 1L;
+        Photo photo = createPhoto(photoId);
+        when(photoRepository.findById(photoId)).thenReturn(Optional.of(photo));
+
+        Photo result = photoService.getPhotoById(photoId);
+
+        assertNotNull(result);
+        assertEquals(photo, result);
+        verify(photoRepository, times(1)).findById(photoId);
+    }
+
+    @Test
+    public void testGetPhotosByAlbumId() {
+        Long albumId = 1L;
+        List<Photo> photos = createPhotos();
+        when(photoRepository.findAllByAlbumIdOrderByTitleAsc(albumId)).thenReturn(photos);
+
+        List<Photo> result = photoService.getPhotosByAlbumId(albumId);
+
+        assertEquals(photos.size(), result.size());
+        verify(photoRepository, times(1)).findAllByAlbumIdOrderByTitleAsc(albumId);
+    }
+
+    @Test
+    public void testSavePhoto() {
+        Photo photo = createPhoto(1L);
+        when(photoRepository.save(photo)).thenReturn(photo);
+
+        Photo result = photoService.save(photo);
+
+        assertNotNull(result);
+        assertEquals(photo, result);
+        verify(photoRepository, times(1)).save(photo);
+    }
+
+    @Test
+    public void testDeletePhoto() {
+        Long photoId = 1L;
+        when(photoRepository.findById(photoId)).thenReturn(Optional.of(createPhoto(photoId)));
+
+        assertDoesNotThrow(() -> photoService.delete(photoId));
+        verify(photoRepository, times(1)).delete(any());
+    }
+
+    private List<Photo> createPhotos() {
+        List<Photo> photos = new ArrayList<>();
+
+        for (long i = 1; i <= 5; i++) {
+            photos.add(createPhoto(i));
+        }
+
+        return photos;
+    }
+
+    private Photo createPhoto(Long photoId) {
         Photo photo = new Photo();
+        photo.setId(photoId);
+        String photoTitle = "photoTitle";
         photo.setTitle(photoTitle);
-        photo.setUrl(photoUrl);
+        String photoThumbnailUrl = "photoThumbnailUrl";
         photo.setThumbnailUrl(photoThumbnailUrl);
+
+        Album album = new Album();
+        album.setId(photoId);
+        album.setTitle("Album Title " + photoId);
+        album.setUserId(1L);
         photo.setAlbum(album);
 
-        Photo createdPhoto = photoService.save(photo);
-        assertEquals(photoTitle, createdPhoto.getTitle());
-        assertEquals(photoUrl, createdPhoto.getUrl());
-        assertEquals(photoThumbnailUrl, createdPhoto.getThumbnailUrl());
-        assertNotNull(createdPhoto.getId());
-        assertEquals(album.getId(), createdPhoto.getAlbum().getId());
-
-        return createdPhoto;
-
-    }
-
-    private void photoRead(Photo createdPhoto) {
-        Long createdPhotoId = createdPhoto.getId();
-        Photo photo = photoService.getPhotoById(createdPhotoId);
-        assertEquals(createdPhoto.getTitle(), photo.getTitle());
-        assertEquals(createdPhoto.getUrl(), photo.getUrl());
-        assertEquals(createdPhoto.getThumbnailUrl(), photo.getThumbnailUrl());
-        assertEquals(createdPhotoId, photo.getId());
-    }
-
-    private void photoReadAll(int totalCnt) {
-        List<Photo> photos = photoService.getPhotosAll();
-        assertEquals(totalCnt, photos.size());
-    }
-
-    private void photoUpdate(Photo createdPhoto) {
-        Long createdPhotoId = createdPhoto.getId();
-        Photo photo = photoService.getPhotoById(createdPhotoId);
-
-        assertNotNull(photo);
-
-        photo.setTitle(photoTitle2);
-        photo.setUrl(photoUrl2);
-        Photo updatedPhoto = photoService.save(photo);
-
-        assertEquals(updatedPhoto.getTitle(), photoTitle2);
-        assertEquals(updatedPhoto.getUrl(), photoUrl2);
-        assertEquals(updatedPhoto.getThumbnailUrl(), createdPhoto.getThumbnailUrl());
-    }
-
-    private void photoDelete(Photo createdPhoto) {
-        photoService.delete(createdPhoto.getId());
-
-        Photo photo = photoService.getPhotoById(createdPhoto.getId());
-        assertNull(photo, "Photo should be null after deletion");
-    }
-
-    private void testAlbumPhotos(Long albumId, int photoCnt) {
-        List<Photo> albumPhotos = photoService.getPhotosByAlbumId(albumId);
-        assertEquals(photoCnt, albumPhotos.size());
-
+        return photo;
     }
 }

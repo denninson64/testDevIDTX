@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping(PhotoController.PHOTOS_BASE_URI)
 public class PhotoController {
@@ -37,7 +40,7 @@ public class PhotoController {
         }
     }
 
-    @GetMapping("/byAlbum/{id}") //api/photos/byAlbum/{id}
+    @GetMapping("/byAlbum/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Iterable<Photo>> getPhotosByAlbumId(@PathVariable("id") Long id) {
         Album existingAlbum = albumService.getAlbumById(id);
@@ -47,5 +50,12 @@ public class PhotoController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    public ResponseEntity<Object> handleObjectNotFoundException(ObjectNotFoundException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }
